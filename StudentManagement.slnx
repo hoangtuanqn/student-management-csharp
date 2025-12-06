@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Helpers/Utils.csproj" />
+  <Project Path="Interfaces/Interfaces.csproj" />
+  <Project Path="Models/Models.csproj" />
+  <Project Path="Repositories/Repositories.csproj" />
+  <Project Path="Services/Services.csproj" />
+  <Project Path="StudentManagement/StudentManagerment.csproj" />
+</Solution>
