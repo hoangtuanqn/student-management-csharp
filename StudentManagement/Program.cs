@@ -48,22 +48,6 @@ namespace student_management
         {
             IStudentRepository repo = new StudentRepository();
             IStudentService service = new StudentService(repo);
-            service.AddStudent(new Student()
-            {
-                FullName = "Pham Hoang Tuan",
-                BirthYear = 2006,
-
-                Major = "KTPM",
-                StudentCode = "SE200947"
-            });
-            service.AddStudent(new Student()
-            {
-                FullName = "Nguyen Thanh Tuyen",
-                BirthYear = 2002,
-
-                Major = "KTPM",
-                StudentCode = "SE200948"
-            });
             bool isContinue = true;
             while (isContinue)
             {
