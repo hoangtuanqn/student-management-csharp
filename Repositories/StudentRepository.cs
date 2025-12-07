@@ -6,9 +6,9 @@ using System.Text;
 
 namespace Repositories
 {
-    public class StudentRepository : IStudentRepository
+    public class StudentRepository(List<Student> students) : IStudentRepository
     {
-        private readonly List<Student> _students = [];
+        private readonly List<Student> _students = students;
         public List<Student> GetAll() => _students;
 
         public Student? GetStudentByCode(string studentCode)
@@ -52,6 +52,7 @@ namespace Repositories
                 _students.Remove(student);
             }
         }
+
 
         public bool Exists(string studentCode) => _students.Any(s => s.StudentCode == studentCode);
     }

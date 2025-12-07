@@ -46,7 +46,8 @@ namespace student_management
         }
         static void Main(string[] args)
         {
-            IStudentRepository repo = new StudentRepository();
+            StoreData storeData = new StoreData();
+            IStudentRepository repo = new StudentRepository(storeData.ReadDataToFile());
             IStudentService service = new StudentService(repo);
             bool isContinue = true;
             while (isContinue)
@@ -57,12 +58,15 @@ namespace student_management
                 {
                     case "1":
                         AddStudent(service);
+                        storeData.WriteDataInFile(service.ShowStudents());
                         break;
                     case "2":
                         UpdateStudent(service);
+                        storeData.WriteDataInFile(service.ShowStudents());
                         break;
                     case "3":
                         DeleteStudent(service);
+                        storeData.WriteDataInFile(service.ShowStudents());
                         break;
                     case "4":
                         ShowAllStudents(service);
