@@ -12,7 +12,7 @@ Student Management System là một ứng dụng console đơn giản được x
 - ✅ Xem danh sách tất cả sinh viên
 - ✅ Tìm kiếm sinh viên theo tên
 - ✅ Sắp xếp sinh viên theo năm sinh (tăng dần/giảm dần)
-- ✅ **Lưu trữ dữ liệu linh hoạt**: 
+- ✅ **Lưu trữ dữ liệu linh hoạt**:
   - Lưu vào **MySQL Database** (mặc định)
   - Lưu vào **file JSON** (tùy chọn)
 
@@ -117,6 +117,7 @@ StudentManagement/
 Dự án hỗ trợ **2 phương án lưu trữ** dữ liệu, có thể chuyển đổi dễ dàng:
 
 ### 1. **MySQL Database** (mặc định)
+
 - Sử dụng `StudentDbRepository` để tương tác với MySQL
 - Connection string được cấu hình trong [appsettings.json](StudentManagement/appsettings.json)
 - Sử dụng **MySql.Data** package và ADO.NET
@@ -124,6 +125,7 @@ Dự án hỗ trợ **2 phương án lưu trữ** dữ liệu, có thể chuyể
 - Dữ liệu được lưu trữ vĩnh viễn trong database `student_management`
 
 **Kích hoạt MySQL storage** (hiện tại đang bật):
+
 ```csharp
 // Trong Program.cs
 IStudentRepository repo = new StudentDbRepository();
@@ -131,12 +133,14 @@ IStudentService service = new StudentService(repo);
 ```
 
 ### 2. **JSON File** (tùy chọn)
+
 - Sử dụng `StudentRepository` với `StudentFileRepository`
 - Dữ liệu được lưu trong file `students.json`
 - Tự động serialize/deserialize với System.Text.Json
 - Phù hợp cho testing hoặc môi trường không có database
 
 **Chuyển sang JSON storage**:
+
 ```csharp
 // Trong Program.cs, bỏ comment và comment dòng database
 IStoreData storeData = new StudentFileRepository();
@@ -166,6 +170,7 @@ git clone https://github.com/hoangtuanqn/student-management-csharp.git
 #### 2.1. Cài đặt MySQL Server
 
 Nếu chưa có MySQL Server, tải và cài đặt từ:
+
 - [MySQL Community Server](https://dev.mysql.com/downloads/mysql/)
 - Hoặc sử dụng XAMPP/WAMP/MAMP
 
@@ -180,6 +185,7 @@ mysql -u root -p < database.sql
 Hoặc copy nội dung file `database.sql` và execute trong MySQL Workbench.
 
 Script sẽ tạo:
+
 - Database: `student_management`
 - Table: `students` với các cột: `id`, `student_code`, `full_name`, `birth_year`, `major`
 
@@ -207,6 +213,7 @@ dotnet restore
 ```
 
 Lệnh này sẽ tự động cài đặt tất cả packages cần thiết:
+
 - **MySql.Data** (9.5.0) - MySQL connector cho .NET
 - **Microsoft.Extensions.Configuration.Json** (10.0.1) - Đọc appsettings.json
 - **System.Text.Json** - Xử lý JSON file
@@ -364,7 +371,7 @@ Interfaces
 - **Framework**: .NET 10.0
 - **Architecture Pattern**: Clean Architecture
 - **Database**: MySQL 8.0+ (MySql.Data 9.5.0)
-- **Data Storage**: 
+- **Data Storage**:
   - MySQL Database (primary)
   - JSON File với System.Text.Json (alternative)
 - **Configuration**: Microsoft.Extensions.Configuration.Json
@@ -413,12 +420,14 @@ Dự án này được tạo ra với mục đích:
 Mở file [Program.cs](StudentManagement/Program.cs) và thay đổi code khởi tạo repository:
 
 **Sử dụng MySQL** (mặc định):
+
 ```csharp
 IStudentRepository repo = new StudentDbRepository();
 IStudentService service = new StudentService(repo);
 ```
 
 **Sử dụng JSON File**:
+
 ```csharp
 IStoreData storeData = new StudentFileRepository();
 IStudentRepository repo = new StudentRepository(storeData.ReadDataToFile());
@@ -428,15 +437,18 @@ IStudentService service = new StudentService(repo);
 ### Troubleshooting
 
 **Lỗi kết nối MySQL**:
+
 - Kiểm tra MySQL Server đã chạy chưa
 - Kiểm tra connection string trong appsettings.json
 - Đảm bảo database `student_management` đã được tạo
 - Kiểm tra username/password MySQL
 
 **Lỗi "Students table doesn't exist"**:
+
 - Chạy lại script `database.sql` để tạo table
 
 **Lỗi package MySql.Data**:
+
 ```bash
 cd Helpers
 dotnet restore
@@ -453,7 +465,7 @@ Dự án này được tạo ra cho mục đích học tập và có thể tự 
 - ✅ **Đã implement**: MySQL database với ADO.NET và parameterized queries
 - ✅ **Đã implement**: Dual storage (MySQL + JSON file)
 - ✅ **Đã implement**: Configuration management với appsettings.json
-- 🔄 **Có thể mở rộng**: 
+- 🔄 **Có thể mở rộng**:
   - Sử dụng Entity Framework Core thay vì ADO.NET
   - Implement async/await cho database operations
   - Thêm comprehensive error handling và logging
