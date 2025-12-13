@@ -18,6 +18,6 @@ namespace Interfaces
 
         public void ValidateAge(int birthYear);
         public void ValidateStudentCode(string studentCode);
-        public Student? ChecExistsStudentCode(string studentCode);
+        public Student? CheckExistsStudentCode(string studentCode);
     }
 }

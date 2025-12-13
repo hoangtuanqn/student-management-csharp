@@ -21,12 +21,12 @@ namespace Services
 
         public void DeleteStudent(string studentCode)
         {
-            Student student = ChecExistsStudentCode(studentCode)!;
+            Student student = CheckExistsStudentCode(studentCode)!;
 
             _repo.Delete(student);
         }
 
-        public Student? GetStudentByStudentCode(string studentCode) => ChecExistsStudentCode(studentCode);
+        public Student? GetStudentByStudentCode(string studentCode) => CheckExistsStudentCode(studentCode);
 
         public List<Student>? FindStudentsByName(string name) => ShowStudents().FindAll(student => student.FullName.ToLower().Contains(name.ToLower()));
 
@@ -34,7 +34,7 @@ namespace Services
 
         public void UpdateStudentByCode(string studentCode, Student infoNewstudent)
         {
-            Student? student = ChecExistsStudentCode(studentCode)!;
+            Student? student = CheckExistsStudentCode(studentCode)!;
             ValidateAge(student.BirthYear);
 
             _repo.Update(studentCode, infoNewstudent);
@@ -59,7 +59,7 @@ namespace Services
             }
         }
 
-        public Student? ChecExistsStudentCode(string studentCode)
+        public Student? CheckExistsStudentCode(string studentCode)
         {
             Student? student = _repo.GetStudentByCode(studentCode);
             if (student == null) throw new Exception("Student ID does not exist in the system!");

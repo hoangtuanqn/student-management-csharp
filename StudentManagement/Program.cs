@@ -1,9 +1,8 @@
 ﻿using Helpers;
 using Interfaces;
-using Repositories;
-using Services;
 using Models;
-using System.Runtime.CompilerServices;
+using Repositories.DatabaseStore;
+using Services;
 namespace student_management
 {
     internal class Program
@@ -46,8 +45,9 @@ namespace student_management
         }
         static void Main(string[] args)
         {
-            StoreData storeData = new StoreData();
-            IStudentRepository repo = new StudentRepository(storeData.ReadDataToFile());
+            //IStoreData storeData = new StudentFileRepository();
+            //IStudentRepository repo = new StudentRepository(storeData.ReadDataToFile());
+            IStudentRepository repo = new StudentDbRepository();
             IStudentService service = new StudentService(repo);
             bool isContinue = true;
             while (isContinue)
@@ -58,15 +58,15 @@ namespace student_management
                 {
                     case "1":
                         AddStudent(service);
-                        storeData.WriteDataInFile(service.ShowStudents());
+                        //storeData.WriteDataInFile(service.ShowStudents());
                         break;
                     case "2":
                         UpdateStudent(service);
-                        storeData.WriteDataInFile(service.ShowStudents());
+                        //storeData.WriteDataInFile(service.ShowStudents());
                         break;
                     case "3":
                         DeleteStudent(service);
-                        storeData.WriteDataInFile(service.ShowStudents());
+                        //storeData.WriteDataInFile(service.ShowStudents());
                         break;
                     case "4":
                         ShowAllStudents(service);

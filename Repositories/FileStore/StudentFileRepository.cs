@@ -7,9 +7,9 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Unicode;
 
-namespace Repositories
+namespace Repositories.FileStore
 {
-    public class StoreData : IStoreData
+    public class StudentFileRepository : IStoreData
     {
         public static string path = "students.json";
         public List<Student> ReadDataToFile()

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Repositories
+namespace Repositories.FileStore
 {
     public class StudentRepository(List<Student> students) : IStudentRepository
     {

@@ -12,7 +12,9 @@ Student Management System là một ứng dụng console đơn giản được x
 - ✅ Xem danh sách tất cả sinh viên
 - ✅ Tìm kiếm sinh viên theo tên
 - ✅ Sắp xếp sinh viên theo năm sinh (tăng dần/giảm dần)
-- ✅ **Lưu trữ dữ liệu vào file JSON** (tự động lưu sau mỗi thao tác)
+- ✅ **Lưu trữ dữ liệu linh hoạt**: 
+  - Lưu vào **MySQL Database** (mặc định)
+  - Lưu vào **file JSON** (tùy chọn)
 
 ## Clean Architecture
 
@@ -35,6 +37,7 @@ StudentManagement/
 │   ├── IStudentRepository.cs  # Interface cho Data Access
 │   ├── IStudentService.cs     # Interface cho Business Logic
 │   ├── IStoreData.cs          # Interface cho File Storage
+│   ├── IDbContext.cs          # Interface cho Database Context
 │   └── Interfaces.csproj
 │
 ├── Services/                  # Application Layer - Business Logic
@@ -42,17 +45,24 @@ StudentManagement/
 │   └── Services.csproj
 │
 ├── Repositories/              # Infrastructure Layer - Data Access
-│   ├── StudentRepository.cs   # Implement data storage (in-memory)
-│   ├── StoreData.cs           # Implement file storage (JSON)
+│   ├── FileStore/             # File-based storage
+│   │   ├── StudentFileRepository.cs   # Implement JSON file storage
+│   │   └── StudentRepository.cs       # In-memory repository với file sync
+│   ├── DatabaseStore/         # Database storage (MySQL)
+│   │   ├── DbContext.cs              # Database context và connection
+│   │   └── StudentDbRepository.cs    # Implement MySQL data access
 │   └── Repositories.csproj
 │
 ├── Helpers/                   # Infrastructure Layer - Utilities
 │   ├── InputHelper.cs         # Utility cho input validation
 │   └── Utils.csproj
 │
-└── StudentManagement/         # Presentation Layer - UI
-    ├── Program.cs             # Console UI và menu điều khiển
-    └── StudentManagerment.csproj
+├── StudentManagement/         # Presentation Layer - UI
+│   ├── Program.cs             # Console UI và menu điều khiển
+│   ├── appsettings.json       # Cấu hình database connection string
+│   └── StudentManagerment.csproj
+│
+└── database.sql               # SQL script tạo database và table
 ```
 
 ### Các tầng trong Clean Architecture
@@ -73,9 +83,16 @@ StudentManagement/
 
 #### 3. **Infrastructure Layer (Repositories & Helpers)**
 
-- **Repositories**: Implement data access
-  - `StudentRepository`: Quản lý danh sách sinh viên trong memory
-  - `StoreData`: Xử lý lưu trữ và đọc dữ liệu từ file JSON (`students.json`)
+- **Repositories**: Implement data access với nhiều phương án lưu trữ
+  - **FileStore**:
+    - `StudentRepository`: Quản lý danh sách sinh viên trong memory với đồng bộ file
+    - `StudentFileRepository`: Xử lý lưu trữ và đọc dữ liệu từ file JSON (`students.json`)
+  - **DatabaseStore** (mới):
+    - `DbContext`: Quản lý kết nối MySQL database thông qua connection string từ appsettings.json
+    - `StudentDbRepository`: Implement CRUD operations với MySQL database
+      - Sử dụng ADO.NET và MySql.Data connector
+      - Thực hiện các câu lệnh SQL: SELECT, INSERT, UPDATE, DELETE
+      - Parameterized queries để tránh SQL Injection
 - **Helpers**: Các utility functions
   - `InputHelper`: Xử lý và validate input từ console
 
@@ -91,12 +108,47 @@ StudentManagement/
 - **Testability**: Dễ dàng unit test từng layer độc lập nhờ interface
 - **Maintainability**: Code dễ bảo trì và mở rộng
 - **Independence**: Domain layer hoàn toàn độc lập với framework và UI
-- **Flexibility**: Dễ dàng thay đổi implementation (ví dụ: từ in-memory sang database) mà không ảnh hưởng business logic
+- **Flexibility**: Dễ dàng chuyển đổi giữa các phương án lưu trữ (JSON file ⇄ MySQL database) mà không ảnh hưởng business logic
+  - Chỉ cần thay đổi implementation của `IStudentRepository` trong [Program.cs](StudentManagement/Program.cs)
+  - Từ `StudentFileRepository` sang `StudentDbRepository` hoặc ngược lại
+
+## Lưu trữ dữ liệu linh hoạt
+
+Dự án hỗ trợ **2 phương án lưu trữ** dữ liệu, có thể chuyển đổi dễ dàng:
+
+### 1. **MySQL Database** (mặc định)
+- Sử dụng `StudentDbRepository` để tương tác với MySQL
+- Connection string được cấu hình trong [appsettings.json](StudentManagement/appsettings.json)
+- Sử dụng **MySql.Data** package và ADO.NET
+- CRUD operations được thực hiện qua SQL commands
+- Dữ liệu được lưu trữ vĩnh viễn trong database `student_management`
+
+**Kích hoạt MySQL storage** (hiện tại đang bật):
+```csharp
+// Trong Program.cs
+IStudentRepository repo = new StudentDbRepository();
+IStudentService service = new StudentService(repo);
+```
+
+### 2. **JSON File** (tùy chọn)
+- Sử dụng `StudentRepository` với `StudentFileRepository`
+- Dữ liệu được lưu trong file `students.json`
+- Tự động serialize/deserialize với System.Text.Json
+- Phù hợp cho testing hoặc môi trường không có database
+
+**Chuyển sang JSON storage**:
+```csharp
+// Trong Program.cs, bỏ comment và comment dòng database
+IStoreData storeData = new StudentFileRepository();
+IStudentRepository repo = new StudentRepository(storeData.ReadDataToFile());
+// IStudentRepository repo = new StudentDbRepository(); // Comment dòng này
+```
 
 ## Yêu cầu hệ thống
 
 - **.NET SDK 10.0** hoặc cao hơn
 - **Visual Studio 2022** hoặc **Visual Studio Code** với C# extension
+- **MySQL Server 5.7+** hoặc **MySQL 8.0+** (nếu sử dụng database storage)
 - **Git** để clone repository
 
 ## Hướng dẫn cài đặt và chạy
@@ -109,38 +161,73 @@ Mở terminal/command prompt và chạy lệnh sau:
 git clone https://github.com/hoangtuanqn/student-management-csharp.git
 ```
 
-Sau đó di chuyển vào thư mục dự án:
+### Bước 2: Cấu hình MySQL Database (nếu sử dụng database storage)
+
+#### 2.1. Cài đặt MySQL Server
+
+Nếu chưa có MySQL Server, tải và cài đặt từ:
+- [MySQL Community Server](https://dev.mysql.com/downloads/mysql/)
+- Hoặc sử dụng XAMPP/WAMP/MAMP
+
+#### 2.2. Tạo database và table
+
+Mở MySQL Workbench hoặc MySQL Command Line và chạy script từ file `database.sql`:
+
+```bash
+mysql -u root -p < database.sql
+```
+
+Hoặc copy nội dung file `database.sql` và execute trong MySQL Workbench.
+
+Script sẽ tạo:
+- Database: `student_management`
+- Table: `students` với các cột: `id`, `student_code`, `full_name`, `birth_year`, `major`
+
+#### 2.3. Cấu hình connection string
+
+Mở file `StudentManagement/appsettings.json` và cập nhật connection string:
+
+```json
+{
+  "ConnectionStrings": {
+    "Default": "Server=localhost; Database=student_management; User ID=root; Password=your_password"
+  }
+}
+```
+
+Thay `your_password` bằng mật khẩu MySQL của bạn.
+
+### Bước 3: Restore packages (cài đặt dependencies)
+
+Trước khi build project, cần cài đặt các NuGet packages cần thiết:
 
 ```bash
 cd student-management-csharp
+dotnet restore
 ```
 
-### Bước 2: Mở dự án trong Visual Studio
+Lệnh này sẽ tự động cài đặt tất cả packages cần thiết:
+- **MySql.Data** (9.5.0) - MySQL connector cho .NET
+- **Microsoft.Extensions.Configuration.Json** (10.0.1) - Đọc appsettings.json
+- **System.Text.Json** - Xử lý JSON file
+
+### Bước 4: Build và chạy project
+
+#### Cách 1: Sử dụng Visual Studio
 
 1. Mở **Visual Studio 2022**
 2. Chọn **File** → **Open** → **Project/Solution**
 3. Điều hướng đến thư mục vừa clone và chọn file `StudentManagement.slnx`
 4. Click **Open**
-
-### Bước 3: Cấu hình Startup Project
-
-**Quan trọng**: Cần đặt `StudentManagement` làm startup project
-
-1. Trong **Solution Explorer**, tìm project `StudentManagement`
-2. Click chuột phải vào project `StudentManagement`
-3. Chọn **Set as Startup Project**
-4. Project `StudentManagement` sẽ được highlight (in đậm)
-
-### Bước 4: Build và chạy ứng dụng
-
-#### Cách 1: Sử dụng Visual Studio
-
-1. Nhấn **F5** hoặc click nút **Start** (▶️) trên toolbar
-2. Hoặc chọn **Debug** → **Start Debugging**
+5. Visual Studio sẽ tự động restore packages (kiểm tra Output window)
+6. Trong **Solution Explorer**, click chuột phải vào project `StudentManagement` và chọn **Set as Startup Project**
+7. Nhấn **F5** hoặc click nút **Start** (▶️) để chạy
 
 #### Cách 2: Sử dụng Command Line
 
 ```bash
+cd student-management-csharp
+
 # Build solution
 dotnet build
 
@@ -152,7 +239,7 @@ dotnet run
 #### Cách 3: Sử dụng Visual Studio Code
 
 1. Mở thư mục dự án trong VS Code
-2. Mở terminal trong VS Code (**Terminal** → **New Terminal**)
+2. Mở terminal (**Terminal** → **New Terminal**)
 3. Chạy lệnh:
 
 ```bash
@@ -160,7 +247,7 @@ cd StudentManagement
 dotnet run
 ```
 
-### Bước 5: Sử dụng ứng dụng
+## Sử dụng ứng dụng
 
 Sau khi chạy thành công, bạn sẽ thấy menu như sau:
 
@@ -276,11 +363,16 @@ Interfaces
 - **Ngôn ngữ**: C# 12
 - **Framework**: .NET 10.0
 - **Architecture Pattern**: Clean Architecture
-- **Data Storage**: JSON File (System.Text.Json)
+- **Database**: MySQL 8.0+ (MySql.Data 9.5.0)
+- **Data Storage**: 
+  - MySQL Database (primary)
+  - JSON File với System.Text.Json (alternative)
+- **Configuration**: Microsoft.Extensions.Configuration.Json
 - **Design Patterns**:
   - Repository Pattern
   - Dependency Injection
   - Interface Segregation
+  - Strategy Pattern (cho việc chuyển đổi storage)
 
 ## Tác giả
 
@@ -295,9 +387,60 @@ Dự án này được tạo ra với mục đích:
 
 - Học và thực hành Clean Architecture trong .NET
 - Hiểu về Dependency Injection và Inversion of Control
-- Áp dụng Repository Pattern
+- Áp dụng Repository Pattern với nhiều implementation
 - Thực hành SOLID principles
 - Làm quen với cấu trúc multi-project solution trong .NET
+- Học cách làm việc với MySQL database trong C#
+- Thực hành ADO.NET và parameterized queries
+- Hiểu về Strategy Pattern để chuyển đổi data source linh hoạt
+
+## Tính năng nổi bật
+
+✨ **Dual Storage Support**: Chuyển đổi dễ dàng giữa MySQL và JSON file chỉ bằng vài dòng code
+
+🏗️ **Clean Architecture**: Tách biệt rõ ràng các layer, dễ test và maintain
+
+🔒 **Security**: Sử dụng parameterized queries để tránh SQL Injection
+
+⚙️ **Configuration-based**: Database connection string được quản lý qua appsettings.json
+
+🎯 **SOLID Principles**: Code được tổ chức theo các nguyên tắc SOLID
+
+## Lưu ý khi sử dụng
+
+### Chuyển đổi giữa MySQL và JSON
+
+Mở file [Program.cs](StudentManagement/Program.cs) và thay đổi code khởi tạo repository:
+
+**Sử dụng MySQL** (mặc định):
+```csharp
+IStudentRepository repo = new StudentDbRepository();
+IStudentService service = new StudentService(repo);
+```
+
+**Sử dụng JSON File**:
+```csharp
+IStoreData storeData = new StudentFileRepository();
+IStudentRepository repo = new StudentRepository(storeData.ReadDataToFile());
+IStudentService service = new StudentService(repo);
+```
+
+### Troubleshooting
+
+**Lỗi kết nối MySQL**:
+- Kiểm tra MySQL Server đã chạy chưa
+- Kiểm tra connection string trong appsettings.json
+- Đảm bảo database `student_management` đã được tạo
+- Kiểm tra username/password MySQL
+
+**Lỗi "Students table doesn't exist"**:
+- Chạy lại script `database.sql` để tạo table
+
+**Lỗi package MySql.Data**:
+```bash
+cd Helpers
+dotnet restore
+```
 
 ## License
 
@@ -305,12 +448,17 @@ Dự án này được tạo ra cho mục đích học tập và có thể tự 
 
 ---
 
-**Note**: Đây là một dự án học tập đơn giản. Trong thực tế, bạn nên:
+**Ghi chú**: Đây là một dự án học tập về Clean Architecture và quản lý dữ liệu. Một số điểm cần cải thiện cho production:
 
-- Sử dụng database (SQL Server, PostgreSQL) thay vì JSON file
-- Thêm error handling cho file I/O operations
-- Implement unit tests cho từng layer
-- Sử dụng dependency injection container (như Microsoft.Extensions.DependencyInjection)
-- Thêm data validation phức tạp hơn
-- Implement async/await cho file operations
-- Thêm backup mechanism cho dữ liệu quan trọng
+- ✅ **Đã implement**: MySQL database với ADO.NET và parameterized queries
+- ✅ **Đã implement**: Dual storage (MySQL + JSON file)
+- ✅ **Đã implement**: Configuration management với appsettings.json
+- 🔄 **Có thể mở rộng**: 
+  - Sử dụng Entity Framework Core thay vì ADO.NET
+  - Implement async/await cho database operations
+  - Thêm comprehensive error handling và logging
+  - Implement unit tests và integration tests
+  - Sử dụng dependency injection container
+  - Thêm data validation phức tạp hơn
+  - Connection pooling và retry logic
+  - Database migration management
